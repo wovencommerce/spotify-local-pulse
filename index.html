@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Local Pulse · Spotify Prototype</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Local Pulse">
+<meta name="theme-color" content="#121212">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -23,17 +30,20 @@
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; color:inherit; }
 *, *::before, *::after { color: inherit; }
 body {
-  background:#0d0d1a;
-  display:flex; justify-content:center; align-items:center;
-  min-height:100vh; font-family:'DM Sans',sans-serif;
+  background: var(--bg);
+  font-family:'DM Sans',sans-serif;
   color: #ffffff;
+  margin: 0; padding: 0;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
 }
 .phone {
-  width:390px; height:844px; background:var(--bg);
-  border-radius:52px; overflow:hidden; position:relative;
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 0 0 10px #0a0a0a,
-    0 0 0 11px rgba(255,255,255,0.06), 0 50px 120px rgba(0,0,0,0.9),
-    0 0 100px rgba(29,185,84,0.08);
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  overflow: hidden;
+  position: relative;
   color: #ffffff;
 }
 .screen {
@@ -45,12 +55,8 @@ body {
 .screen.slide-out { transform:translateX(-28%); }
 #s1 { transform:translateX(0); }
 
-.status {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:14px 26px 6px; font-size:12px; font-weight:700;
-  color:var(--text); z-index:20; position:relative;
-}
-.status-r { display:flex; gap:5px; align-items:center; font-size:11px; }
+.status { display: none; }
+.status-r { display: none; }
 
 .bnav {
   position:absolute; bottom:0; left:0; right:0; height:72px;
@@ -67,7 +73,7 @@ body {
 .ni svg { width:22px; height:22px; }
 
 /* ── SCREEN 1 ── */
-.s1-scroll { height:772px; overflow-y:auto; padding-bottom:80px; }
+.s1-scroll { height:calc(100vh - 72px); overflow-y:auto; padding-bottom:80px; }
 .s1-scroll::-webkit-scrollbar { display:none; }
 .s1-topbar { display:flex; justify-content:space-between; align-items:center; padding:4px 20px 18px; }
 .s1-greeting { font-size:21px; font-weight:800; }
@@ -88,18 +94,85 @@ body {
 
 /* HOME LP BANNER */
 .lp-banner {
-  margin:0 20px 24px; border-radius:14px; overflow:hidden;
-  position:relative; cursor:pointer; border:1px solid rgba(29,185,84,0.2);
-  background:#141e18; display:flex; height:160px; transition:transform 0.15s;
+  margin: 0 20px 24px;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  border: 1.5px solid rgba(29,185,84,0.5);
+  background: linear-gradient(135deg, #0a1f12 0%, #0f2d1a 45%, #1a3d26 100%);
+  display: flex;
+  height: 175px;
+  transition: transform 0.15s;
+  box-shadow: 0 0 30px rgba(29,185,84,0.14), 0 6px 24px rgba(0,0,0,0.4);
 }
-.lp-banner:active { transform:scale(0.98); }
-.lp-banner-left { padding:18px 16px 18px 18px; position:relative; z-index:2; width:57%; display:flex; flex-direction:column; justify-content:space-between; }
-.lp-tag { display:inline-block; background:var(--green); color:#000; font-size:9px; font-weight:800; padding:3px 9px; border-radius:20px; margin-bottom:8px; letter-spacing:0.8px; width:fit-content; }
-.lp-banner-title { font-size:20px; font-weight:800; margin-bottom:5px; color:#fff; line-height:1.15; }
-.lp-banner-sub { font-size:11px; color:#ffffff; margin-bottom:14px; line-height:1.5; flex:1; }
-.lp-btn { background:var(--green); color:#000; border:none; border-radius:20px; padding:9px 16px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; width:fit-content; }
-.lp-banner-map { position:absolute; right:0; top:0; bottom:0; width:46%; overflow:hidden; }
-.lp-banner-map svg { width:100%; height:100%; }
+.lp-banner:active { transform: scale(0.98); }
+
+/* decorative lines overlay */
+.lp-banner::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 38px,
+      rgba(29,185,84,0.06) 38px,
+      rgba(29,185,84,0.06) 39px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      transparent,
+      transparent 28px,
+      rgba(29,185,84,0.06) 28px,
+      rgba(29,185,84,0.06) 29px
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* green glow top-right */
+.lp-banner::after {
+  content: '';
+  position: absolute; top: -30px; right: -30px;
+  width: 160px; height: 160px;
+  background: radial-gradient(circle, rgba(29,185,84,0.22) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.lp-banner-left {
+  padding: 18px 16px 18px 18px;
+  position: relative; z-index: 2;
+  width: 57%;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.lp-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--green); color: #000;
+  font-size: 9px; font-weight: 800;
+  padding: 4px 10px; border-radius: 20px;
+  margin-bottom: 8px; letter-spacing: 0.8px; width: fit-content;
+}
+.lp-banner-title {
+  font-size: 22px; font-weight: 800;
+  margin-bottom: 6px; color: #fff;
+  line-height: 1.1; letter-spacing: -0.3px;
+}
+.lp-banner-sub {
+  font-size: 11px; color: rgba(255,255,255,0.7);
+  margin-bottom: 14px; line-height: 1.55; flex: 1;
+}
+.lp-btn {
+  background: var(--green); color: #000; border: none;
+  border-radius: 20px; padding: 9px 16px;
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit; width: fit-content;
+  box-shadow: 0 2px 10px rgba(29,185,84,0.4);
+}
+.lp-banner-map { position: absolute; right: 0; top: 0; bottom: 0; width: 46%; overflow: hidden; z-index: 2; }
+.lp-banner-map svg { width: 100%; height: 100%; }
 
 .sec-hdr { display:flex; justify-content:space-between; align-items:center; padding:0 20px 14px; }
 .sec-title { font-size:17px; font-weight:800; }
@@ -126,7 +199,7 @@ body {
 .np-ctrl { display:flex; gap:16px; align-items:center; color:#fff; font-size:18px; }
 
 /* ── SCREEN 2 ── */
-.s2-scroll { height:772px; overflow-y:auto; padding-bottom:80px; }
+.s2-scroll { height:calc(100vh - 72px); overflow-y:auto; padding-bottom:80px; }
 .s2-scroll::-webkit-scrollbar { display:none; }
 .s2-hdr { display:flex; align-items:center; gap:14px; padding:6px 20px 16px; }
 .back-btn { width:32px; height:32px; background:var(--card2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; flex-shrink:0; color:#fff; border:1px solid var(--border); }
@@ -203,7 +276,12 @@ body {
 .nearby-dist { font-size:10px; color:var(--text-muted); margin-top:2px; }
 
 /* ── SCREEN 3 MAP ── */
-.map-wrap { position:absolute; top:0; left:0; right:0; height:334px; overflow:hidden; }
+.map-wrap {
+  position:absolute; top:0; left:0; right:0;
+  bottom: 510px;
+  overflow:hidden;
+  transition: bottom 0.3s cubic-bezier(0.4,0,0.2,1);
+}
 .map-bg { width:100%; height:100%; background:#1a2035; position:relative; }
 .map-streets { position:absolute; top:0; left:0; width:100%; height:100%; }
 .map-hdr { position:absolute; top:0; left:0; right:0; z-index:8; padding:36px 16px 0; background:linear-gradient(to bottom,rgba(26,32,53,0.95) 55%,transparent); }
@@ -243,7 +321,7 @@ body {
 .feed-chips::-webkit-scrollbar { display:none; }
 .feed-chip { flex-shrink:0; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid rgba(255,255,255,0.12); color:#fff; background:rgba(255,255,255,0.06); font-family:'DM Sans',sans-serif; }
 .feed-chip.active { background:var(--green); color:#000; border-color:var(--green); }
-.feed-scroll { overflow-y:auto; height:390px; padding:6px 16px 16px; }
+.feed-scroll { overflow-y:auto; height:calc(510px - 120px); padding:6px 16px 16px; }
 .feed-scroll::-webkit-scrollbar { display:none; }
 
 /* FEED CARD */
@@ -309,7 +387,7 @@ body {
 .s4-fade { position:absolute; bottom:0; left:0; right:0; height:40px; background:linear-gradient(to bottom,transparent,var(--bg)); z-index:2; }
 
 .s4-scroll {
-  height: 442px;
+  height: calc(100vh - 220px - 72px - 88px);
   overflow-y: auto;
   padding: 0 0 16px;
   position: relative;
@@ -411,12 +489,24 @@ body {
 }
 .btn-icon-cta:active { background:var(--card3); }
 
-/* SAVE BUTTON SAVED STATE */
-.btn-icon-cta.saved {
-  background: rgba(29,185,84,0.15);
-  border-color: rgba(29,185,84,0.5) !important;
-}
-.btn-icon-cta.saved svg { stroke: var(--green); }
+/* FEED CARD SAVED STATE */
+.act-btn.saved { background: rgba(29,185,84,0.15); border: 1px solid rgba(29,185,84,0.4); }
+.act-btn.saved svg { stroke: var(--green); }
+
+/* HUB CARD SAVED STATE */
+.lp-act.saved { background: rgba(29,185,84,0.2); }
+.lp-act.saved svg { stroke: var(--green); }
+
+/* DRAGGABLE FEED PANEL */
+.feed-panel { transition: height 0.3s cubic-bezier(0.4,0,0.2,1); }
+
+/* DRAGGABLE MAP */
+.map-bg { cursor: grab; }
+.map-bg:active { cursor: grabbing; }
+.map-streets { pointer-events: none; }
+
+/* SHARE SHEET drag support */
+.share-sheet { touch-action: none; }
 
 /* SAVE TOAST */
 .save-toast {
@@ -505,7 +595,7 @@ body {
 
 <!-- ══ SCREEN 1: HOME ══ -->
 <div class="screen active" id="s1">
-  <div class="status"><span>9:41</span><div class="status-r"><span>●●●</span><span> WiFi</span><span> 🔋</span></div></div>
+
   <div class="s1-scroll">
     <div class="s1-topbar">
       <div class="s1-greeting">Good evening</div>
@@ -525,35 +615,55 @@ body {
       <div class="lp-banner-left">
         <div class="lp-tag">✦ NEW</div>
         <div class="lp-banner-title">Local Pulse</div>
-        <div class="lp-banner-sub">Artists near you,<br>matched to your taste</div>
+        <div class="lp-banner-sub">Discover emerging artists near you, matched to your taste.</div>
         <button class="lp-btn">Explore →</button>
       </div>
       <div class="lp-banner-map">
-        <svg viewBox="0 0 185 130" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-          <rect width="185" height="130" fill="#1a2035"/>
-          <line x1="0" y1="35" x2="185" y2="35" stroke="#4a6fa5" stroke-width="1.2"/>
-          <line x1="0" y1="65" x2="185" y2="65" stroke="#4a6fa5" stroke-width="0.6"/>
-          <line x1="0" y1="95" x2="185" y2="95" stroke="#4a6fa5" stroke-width="1.2"/>
-          <line x1="38" y1="0" x2="38" y2="130" stroke="#4a6fa5" stroke-width="0.6"/>
-          <line x1="92" y1="0" x2="92" y2="130" stroke="#4a6fa5" stroke-width="1.2"/>
-          <line x1="147" y1="0" x2="147" y2="130" stroke="#4a6fa5" stroke-width="0.6"/>
-          <line x1="0" y1="115" x2="185" y2="18" stroke="#4a6fa5" stroke-width="1"/>
-          <rect x="40" y="37" width="50" height="26" fill="rgba(74,111,165,0.1)" rx="1"/>
-          <rect x="94" y="67" width="51" height="26" fill="rgba(74,111,165,0.1)" rx="1"/>
-          <rect x="40" y="67" width="50" height="26" fill="rgba(74,111,165,0.1)" rx="1"/>
-          <circle cx="92" cy="72" r="5" fill="#3B82F6"/>
-          <circle cx="92" cy="72" r="9" fill="rgba(59,130,246,0.2)"/>
-          <!-- green pin -->
-          <rect x="30" y="19" width="60" height="17" rx="8.5" fill="#1DB954"/>
-          <text x="60" y="31" text-anchor="middle" font-size="7.5" font-weight="800" fill="#000" font-family="sans-serif">📍 Top match</text>
-          <polygon points="60,36 57,42 63,42" fill="#1DB954"/>
-          <!-- amber pin -->
-          <rect x="105" y="44" width="55" height="16" rx="8" fill="#F59E0B"/>
-          <text x="132" y="55" text-anchor="middle" font-size="7" font-weight="800" fill="#000" font-family="sans-serif">📍 Good match</text>
-          <polygon points="132,60 129,66 135,66" fill="#F59E0B"/>
-          <!-- dim pin -->
-          <rect x="42" y="80" width="42" height="14" rx="7" fill="rgba(50,60,90,0.92)" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
-          <text x="63" y="90" text-anchor="middle" font-size="6.5" fill="white" font-family="sans-serif">88% match</text>
+        <svg viewBox="0 0 185 175" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+          <rect width="185" height="175" fill="#1a2035"/>
+          <!-- street grid -->
+          <line x1="0" y1="38" x2="185" y2="38" stroke="#4a6fa5" stroke-width="1"/>
+          <line x1="0" y1="72" x2="185" y2="72" stroke="#4a6fa5" stroke-width="0.6"/>
+          <line x1="0" y1="108" x2="185" y2="108" stroke="#4a6fa5" stroke-width="1"/>
+          <line x1="0" y1="144" x2="185" y2="144" stroke="#4a6fa5" stroke-width="0.6"/>
+          <line x1="32" y1="0" x2="32" y2="175" stroke="#4a6fa5" stroke-width="0.6"/>
+          <line x1="80" y1="0" x2="80" y2="175" stroke="#4a6fa5" stroke-width="1"/>
+          <line x1="130" y1="0" x2="130" y2="175" stroke="#4a6fa5" stroke-width="0.6"/>
+          <line x1="0" y1="162" x2="185" y2="22" stroke="#4a6fa5" stroke-width="0.8"/>
+          <!-- blocks -->
+          <rect x="34" y="40" width="44" height="30" fill="rgba(74,111,165,0.09)" rx="1"/>
+          <rect x="82" y="74" width="46" height="32" fill="rgba(74,111,165,0.09)" rx="1"/>
+          <rect x="34" y="74" width="44" height="32" fill="rgba(74,111,165,0.09)" rx="1"/>
+          <rect x="82" y="40" width="46" height="30" fill="rgba(74,111,165,0.09)" rx="1"/>
+          <rect x="34" y="110" width="44" height="32" fill="rgba(74,111,165,0.09)" rx="1"/>
+          <rect x="132" y="74" width="48" height="32" fill="rgba(74,111,165,0.09)" rx="1"/>
+          <!-- user dot -->
+          <circle cx="80" cy="95" r="5" fill="#3B82F6"/>
+          <circle cx="80" cy="95" r="9" fill="rgba(59,130,246,0.18)"/>
+          <!-- TOP MATCH pin (green) -->
+          <rect x="5" y="17" width="54" height="18" rx="9" fill="#1DB954"/>
+          <text x="32" y="29.5" text-anchor="middle" font-size="5.5" font-weight="800" fill="#000" font-family="sans-serif">📍 Top match</text>
+          <polygon points="32,35 29,41 35,41" fill="#1DB954"/>
+          <!-- GOOD MATCH pin (amber) -->
+          <rect x="103" y="47" width="56" height="18" rx="9" fill="#F59E0B"/>
+          <text x="131" y="59.5" text-anchor="middle" font-size="5.5" font-weight="800" fill="#000" font-family="sans-serif">📍 Good match</text>
+          <polygon points="131,65 128,71 134,71" fill="#F59E0B"/>
+          <!-- CLOSEST pin (blue) -->
+          <rect x="46" y="54" width="44" height="18" rx="9" fill="#3B82F6"/>
+          <text x="68" y="66.5" text-anchor="middle" font-size="5.5" font-weight="800" fill="#fff" font-family="sans-serif">📍 Closest</text>
+          <polygon points="68,72 65,78 71,78" fill="#3B82F6"/>
+          <!-- NEXT WEEK pin (dim) -->
+          <rect x="124" y="108" width="56" height="18" rx="9" fill="rgba(50,60,90,0.92)" stroke="rgba(255,255,255,0.22)" stroke-width="0.5"/>
+          <text x="152" y="120.5" text-anchor="middle" font-size="5.5" fill="white" font-family="sans-serif">📅 Next week</text>
+          <polygon points="152,126 149,132 155,132" fill="rgba(50,60,90,0.92)"/>
+          <!-- FREE ENTRY pin (dim) -->
+          <rect x="5" y="114" width="48" height="18" rx="9" fill="rgba(50,60,90,0.92)" stroke="rgba(255,255,255,0.22)" stroke-width="0.5"/>
+          <text x="29" y="126.5" text-anchor="middle" font-size="5.5" fill="white" font-family="sans-serif">🆓 Free entry</text>
+          <polygon points="29,132 26,138 32,138" fill="rgba(50,60,90,0.92)"/>
+          <!-- TONIGHT pin (dim) -->
+          <rect x="80" y="147" width="44" height="18" rx="9" fill="rgba(50,60,90,0.92)" stroke="rgba(255,255,255,0.22)" stroke-width="0.5"/>
+          <text x="102" y="159.5" text-anchor="middle" font-size="5.5" fill="white" font-family="sans-serif">🌙 Tonight</text>
+          <polygon points="102,165 99,171 105,171" fill="rgba(50,60,90,0.92)"/>
         </svg>
       </div>
     </div>
@@ -581,14 +691,14 @@ body {
   <div class="bnav">
     <div class="ni active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
     <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
-    <div class="ni" onclick="goTo('s3')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg><span>Events</span></div>
-    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Library</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h4v13H3z"/><path d="M9 8h4v8H9z"/><path d="M15 5h4v11h-4z"/></svg><span>Your Library</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Create</span></div>
   </div>
 </div>
 
 <!-- ══ SCREEN 2: LIVE EVENTS ══ -->
 <div class="screen" id="s2">
-  <div class="status"><span>9:41</span><div class="status-r"><span>●●●</span><span> WiFi</span><span> 🔋</span></div></div>
+
   <div class="s2-scroll">
     <div class="s2-hdr"><div class="back-btn" onclick="goBack('s1')">‹</div><div class="s2-htitle">Live Events</div></div>
     <div class="s2-hero">
@@ -614,32 +724,32 @@ body {
           <div class="lp-mini-top"><div class="lp-mini-em">🌿</div><div class="lp-match-sm">97%</div></div>
           <div class="lp-mini-name">Cleo Sol</div><div class="lp-mini-venue">Baby's All Right · Tonight</div><div class="lp-mini-dist">0.4 mi · $22</div>
           <div class="lp-mini-acts">
-            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
-            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+            <div class="lp-act" id="hub-bk-1" onclick="event.stopPropagation();toggleHubSave(this,'hub-bk-1')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="lp-act" onclick="event.stopPropagation();openHubShare()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
           </div>
         </div>
         <div class="lp-mini" onclick="event.stopPropagation()">
           <div class="lp-mini-top"><div class="lp-mini-em">🎸</div><div class="lp-match-sm">94%</div></div>
           <div class="lp-mini-name">The Brklyn Set</div><div class="lp-mini-venue">Elsewhere · Tonight</div><div class="lp-mini-dist">1.2 mi · Free</div>
           <div class="lp-mini-acts">
-            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
-            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+            <div class="lp-act" id="hub-bk-2" onclick="event.stopPropagation();toggleHubSave(this,'hub-bk-2')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="lp-act" onclick="event.stopPropagation();openHubShare()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
           </div>
         </div>
         <div class="lp-mini" onclick="event.stopPropagation()">
           <div class="lp-mini-top"><div class="lp-mini-em">🎹</div><div class="lp-match-sm">91%</div></div>
           <div class="lp-mini-name">Sault</div><div class="lp-mini-venue">Brooklyn Steel · Sat</div><div class="lp-mini-dist">2.1 mi · $20</div>
           <div class="lp-mini-acts">
-            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
-            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+            <div class="lp-act" id="hub-bk-3" onclick="event.stopPropagation();toggleHubSave(this,'hub-bk-3')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="lp-act" onclick="event.stopPropagation();openHubShare()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
           </div>
         </div>
         <div class="lp-mini" onclick="event.stopPropagation()">
           <div class="lp-mini-top"><div class="lp-mini-em">🥁</div><div class="lp-match-sm">88%</div></div>
           <div class="lp-mini-name">Dry Cleaning</div><div class="lp-mini-venue">Rough Trade · Fri</div><div class="lp-mini-dist">1.5 mi · $22</div>
           <div class="lp-mini-acts">
-            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
-            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+            <div class="lp-act" id="hub-bk-4" onclick="event.stopPropagation();toggleHubSave(this,'hub-bk-4')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="lp-act" onclick="event.stopPropagation();openHubShare()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
           </div>
         </div>
       </div>
@@ -651,11 +761,42 @@ body {
       <div class="nearby-item"><div class="nearby-thumb nt3">🎸</div><div class="nearby-info"><div class="nearby-name">The Messthetics</div><div class="nearby-det">Elsewhere · Post-punk</div></div><div class="nearby-r"><div class="nearby-date">Sat Apr 12</div><div class="nearby-dist">0.8 mi · $15</div></div></div>
     </div>
   </div>
+
+  <!-- HUB SAVE TOAST -->
+  <div class="save-toast" id="hub-save-toast">
+    <span class="save-toast-icon">🔖</span>
+    <span class="save-toast-text">Saved! We'll remind you before the show.</span>
+  </div>
+
+  <!-- HUB SHARE SHEET -->
+  <div class="share-overlay" id="hub-share-overlay" onclick="closeHubShare()"></div>
+  <div class="share-sheet" id="hub-share-sheet">
+    <div class="share-handle" id="hub-share-handle"></div>
+    <div class="share-title">Share this event</div>
+    <div class="share-friends-label">Send to a friend</div>
+    <div class="share-friends-row">
+      <div class="share-friend" onclick="closeHubShare()"><div class="share-friend-ava" style="background:linear-gradient(135deg,#4a1942,#9d174d);">Y</div><div class="share-friend-name">Yahor</div></div>
+      <div class="share-friend" onclick="closeHubShare()"><div class="share-friend-ava" style="background:linear-gradient(135deg,#064e3b,#059669);">C</div><div class="share-friend-name">Coriander</div></div>
+      <div class="share-friend" onclick="closeHubShare()"><div class="share-friend-ava" style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8);">I</div><div class="share-friend-name">Irma</div></div>
+      <div class="share-friend" onclick="closeHubShare()"><div class="share-friend-ava" style="background:linear-gradient(135deg,#3d1f00,#c2410c);">D</div><div class="share-friend-name">Danny</div></div>
+      <div class="share-friend" onclick="closeHubShare()"><div class="share-friend-ava" style="background:linear-gradient(135deg,#1a1a3e,#6d28d9);">V</div><div class="share-friend-name">Very</div></div>
+    </div>
+    <div class="share-divider"></div>
+    <div class="share-socials-label">Share to</div>
+    <div class="share-socials">
+      <div class="share-social-btn" onclick="closeHubShare()"><div class="share-social-icon" style="background:#1877F2;">f</div><div class="share-social-name">Facebook</div></div>
+      <div class="share-social-btn" onclick="closeHubShare()"><div class="share-social-icon" style="background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);">📷</div><div class="share-social-name">Instagram</div></div>
+      <div class="share-social-btn" onclick="closeHubShare()"><div class="share-social-icon" style="background:#000;">𝕏</div><div class="share-social-name">X</div></div>
+      <div class="share-social-btn" onclick="closeHubShare()"><div class="share-social-icon" style="background:#25D366;">💬</div><div class="share-social-name">WhatsApp</div></div>
+      <div class="share-social-btn" onclick="closeHubShare()"><div class="share-social-icon" style="background:#0088cc;">✈️</div><div class="share-social-name">Telegram</div></div>
+    </div>
+    <button class="share-cancel" onclick="closeHubShare()">Cancel</button>
+  </div>
   <div class="bnav">
     <div class="ni" onclick="goBack('s1')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
     <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
-    <div class="ni active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg><span>Events</span></div>
-    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Library</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h4v13H3z"/><path d="M9 8h4v8H9z"/><path d="M15 5h4v11h-4z"/></svg><span>Your Library</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Create</span></div>
   </div>
 </div>
 
@@ -722,6 +863,48 @@ body {
         </div>
         <div class="pin-tail dim"></div>
       </div>
+      <div class="map-pin" style="left:42px;top:155px;">
+        <div class="pin-label green">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          Dry Cleaning
+        </div>
+        <div class="pin-tail green"></div>
+      </div>
+      <div class="map-pin" style="left:155px;top:58px;">
+        <div class="pin-label amber">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          Militarie Gun
+        </div>
+        <div class="pin-tail amber"></div>
+      </div>
+      <div class="map-pin" style="left:320px;top:88px;">
+        <div class="pin-label dim">
+          <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.55)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          Yasmin Williams
+        </div>
+        <div class="pin-tail dim"></div>
+      </div>
+      <div class="map-pin" style="left:60px;top:228px;">
+        <div class="pin-label dim">
+          <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.55)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          Dos Monos
+        </div>
+        <div class="pin-tail dim"></div>
+      </div>
+      <div class="map-pin" style="left:210px;top:195px;">
+        <div class="pin-label amber">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          Tenci
+        </div>
+        <div class="pin-tail amber"></div>
+      </div>
+      <div class="map-pin" style="left:348px;top:235px;">
+        <div class="pin-label dim">
+          <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.55)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          Slow Pulp
+        </div>
+        <div class="pin-tail dim"></div>
+      </div>
     </div>
   </div>
 
@@ -748,8 +931,8 @@ body {
         <div class="fc-r">
           <div class="fc-dist">0.4 mi</div>
           <div class="fc-acts">
-            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
-            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+            <div class="act-btn" onclick="event.stopPropagation();toggleFeedSave(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="act-btn" onclick="event.stopPropagation();openFeedShare()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
           </div>
         </div>
       </div>
@@ -763,8 +946,8 @@ body {
         <div class="fc-r">
           <div class="fc-dist">1.2 mi</div>
           <div class="fc-acts">
-            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
-            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+            <div class="act-btn" onclick="toggleFeedSave(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="act-btn" onclick="openFeedShare()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
           </div>
         </div>
       </div>
@@ -778,8 +961,8 @@ body {
         <div class="fc-r">
           <div class="fc-dist">2.1 mi</div>
           <div class="fc-acts">
-            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
-            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+            <div class="act-btn" onclick="toggleFeedSave(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="act-btn" onclick="openFeedShare()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
           </div>
         </div>
       </div>
@@ -793,8 +976,8 @@ body {
         <div class="fc-r">
           <div class="fc-dist">1.5 mi</div>
           <div class="fc-acts">
-            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
-            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+            <div class="act-btn" onclick="toggleFeedSave(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="act-btn" onclick="openFeedShare()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
           </div>
         </div>
       </div>
@@ -808,19 +991,50 @@ body {
         <div class="fc-r">
           <div class="fc-dist">0.9 mi</div>
           <div class="fc-acts">
-            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
-            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+            <div class="act-btn" onclick="toggleFeedSave(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="act-btn" onclick="openFeedShare()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- FEED SAVE TOAST -->
+  <div class="save-toast" id="feed-save-toast">
+    <span class="save-toast-icon">🔖</span>
+    <span class="save-toast-text">Saved! We'll remind you before the show.</span>
+  </div>
+
+  <!-- FEED SHARE SHEET -->
+  <div class="share-overlay" id="feed-share-overlay" onclick="closeFeedShare()"></div>
+  <div class="share-sheet" id="feed-share-sheet">
+    <div class="share-handle"></div>
+    <div class="share-title">Share this event</div>
+    <div class="share-friends-label">Send to a friend</div>
+    <div class="share-friends-row">
+      <div class="share-friend" onclick="closeFeedShare()"><div class="share-friend-ava" style="background:linear-gradient(135deg,#4a1942,#9d174d);">Y</div><div class="share-friend-name">Yahor</div></div>
+      <div class="share-friend" onclick="closeFeedShare()"><div class="share-friend-ava" style="background:linear-gradient(135deg,#064e3b,#059669);">C</div><div class="share-friend-name">Coriander</div></div>
+      <div class="share-friend" onclick="closeFeedShare()"><div class="share-friend-ava" style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8);">I</div><div class="share-friend-name">Irma</div></div>
+      <div class="share-friend" onclick="closeFeedShare()"><div class="share-friend-ava" style="background:linear-gradient(135deg,#3d1f00,#c2410c);">D</div><div class="share-friend-name">Danny</div></div>
+      <div class="share-friend" onclick="closeFeedShare()"><div class="share-friend-ava" style="background:linear-gradient(135deg,#1a1a3e,#6d28d9);">V</div><div class="share-friend-name">Very</div></div>
+    </div>
+    <div class="share-divider"></div>
+    <div class="share-socials-label">Share to</div>
+    <div class="share-socials">
+      <div class="share-social-btn" onclick="closeFeedShare()"><div class="share-social-icon" style="background:#1877F2;">f</div><div class="share-social-name">Facebook</div></div>
+      <div class="share-social-btn" onclick="closeFeedShare()"><div class="share-social-icon" style="background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);">📷</div><div class="share-social-name">Instagram</div></div>
+      <div class="share-social-btn" onclick="closeFeedShare()"><div class="share-social-icon" style="background:#000;">𝕏</div><div class="share-social-name">X</div></div>
+      <div class="share-social-btn" onclick="closeFeedShare()"><div class="share-social-icon" style="background:#25D366;">💬</div><div class="share-social-name">WhatsApp</div></div>
+      <div class="share-social-btn" onclick="closeFeedShare()"><div class="share-social-icon" style="background:#0088cc;">✈️</div><div class="share-social-name">Telegram</div></div>
+    </div>
+    <button class="share-cancel" onclick="closeFeedShare()">Cancel</button>
+  </div>
+
   <div class="bnav">
     <div class="ni" onclick="goBack('s1')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
     <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
-    <div class="ni active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg><span>Events</span></div>
-    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Library</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h4v13H3z"/><path d="M9 8h4v8H9z"/><path d="M15 5h4v11h-4z"/></svg><span>Your Library</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Create</span></div>
   </div>
 </div>
 
@@ -1006,8 +1220,8 @@ body {
   <div class="bnav">
     <div class="ni" onclick="goBack('s1')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
     <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
-    <div class="ni active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg><span>Events</span></div>
-    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Library</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h4v13H3z"/><path d="M9 8h4v8H9z"/><path d="M15 5h4v11h-4z"/></svg><span>Your Library</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Create</span></div>
   </div>
 </div>
 
@@ -1085,6 +1299,235 @@ function shareSocial(el) {
     closeShare();
   }, 700);
 }
+
+// ── HUB CARD BOOKMARK ──
+let hubToastTimer = null;
+function toggleHubSave(btn) {
+  const isSaved = btn.classList.toggle('saved');
+  const path = btn.querySelector('path');
+  if (isSaved) {
+    path.setAttribute('fill', 'var(--green)');
+    path.setAttribute('stroke', 'var(--green)');
+  } else {
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'currentColor');
+  }
+  const toast = document.getElementById('hub-save-toast');
+  toast.querySelector('.save-toast-text').textContent = isSaved
+    ? "Saved! We'll remind you before the show."
+    : "Removed from saved events.";
+  toast.querySelector('.save-toast-icon').textContent = isSaved ? '🔖' : '✕';
+  toast.classList.add('visible');
+  clearTimeout(hubToastTimer);
+  hubToastTimer = setTimeout(() => toast.classList.remove('visible'), 2800);
+}
+
+// ── HUB SHARE SHEET ──
+function openHubShare() {
+  document.getElementById('hub-share-overlay').classList.add('visible');
+  document.getElementById('hub-share-sheet').classList.add('visible');
+}
+function closeHubShare() {
+  document.getElementById('hub-share-overlay').classList.remove('visible');
+  document.getElementById('hub-share-sheet').classList.remove('visible');
+}
+
+// ── DRAG TO DISMISS — applies to ALL share sheets ──
+function makeDraggableSheet(sheetId, overlayId, closeFn) {
+  const sheet = document.getElementById(sheetId);
+  if (!sheet) return;
+  let startY = 0, currentY = 0, isDragging = false;
+
+  function onStart(e) {
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    isDragging = true;
+    sheet.style.transition = 'none';
+  }
+  function onMove(e) {
+    if (!isDragging) return;
+    currentY = (e.touches ? e.touches[0].clientY : e.clientY) - startY;
+    if (currentY < 0) currentY = 0;
+    sheet.style.transform = `translateY(${currentY}px)`;
+  }
+  function onEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    sheet.style.transition = '';
+    if (currentY > 100) {
+      closeFn();
+      sheet.style.transform = '';
+    } else {
+      sheet.style.transform = '';
+    }
+    currentY = 0;
+  }
+
+  sheet.addEventListener('touchstart', onStart, { passive: true });
+  sheet.addEventListener('touchmove', onMove, { passive: true });
+  sheet.addEventListener('touchend', onEnd);
+  sheet.addEventListener('mousedown', onStart);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onEnd);
+}
+
+// Initialise drag on all three share sheets after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  makeDraggableSheet('hub-share-sheet', 'hub-share-overlay', closeHubShare);
+  makeDraggableSheet('feed-share-sheet', 'feed-share-overlay', closeFeedShare);
+  makeDraggableSheet('share-sheet', 'share-overlay', closeShare);
+  initDraggableFeed();
+  initDraggableMap();
+});
+
+// ── DRAGGABLE FEED PANEL ──
+function initDraggableFeed() {
+  const panel = document.querySelector('#s3 .feed-panel');
+  const handle = document.querySelector('#s3 .feed-handle');
+  const mapWrap = document.querySelector('#s3 .map-wrap');
+  if (!panel || !handle || !mapWrap) return;
+
+  const screenH = window.innerHeight || 844;
+  const navH = 72;
+  const SNAP_OPEN = 510;
+  const SNAP_FULL = screenH - navH - 40;
+  const SNAP_PEEK = 120;
+
+  let startY = 0, startH = 0, dragging = false;
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+  function updateMap(feedH) {
+    // map bottom edge = feed top = screen bottom - feed height
+    mapWrap.style.bottom = feedH + 'px';
+  }
+
+  function onStart(e) {
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    startH = panel.offsetHeight;
+    dragging = true;
+    panel.style.transition = 'none';
+    mapWrap.style.transition = 'none';
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const delta = startY - y;
+    const newH = clamp(startH + delta, SNAP_PEEK, SNAP_FULL);
+    panel.style.height = newH + 'px';
+    updateMap(newH);
+  }
+  function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+    panel.style.transition = 'height 0.3s cubic-bezier(0.4,0,0.2,1)';
+    mapWrap.style.transition = 'bottom 0.3s cubic-bezier(0.4,0,0.2,1)';
+    const h = panel.offsetHeight;
+    let snapH;
+    if (h > (SNAP_OPEN + SNAP_FULL) / 2) snapH = SNAP_FULL;
+    else if (h < (SNAP_PEEK + SNAP_OPEN) / 2) snapH = SNAP_PEEK;
+    else snapH = SNAP_OPEN;
+    panel.style.height = snapH + 'px';
+    updateMap(snapH);
+  }
+
+  handle.addEventListener('touchstart', onStart, { passive: true });
+  handle.addEventListener('touchmove', onMove, { passive: true });
+  handle.addEventListener('touchend', onEnd);
+  handle.addEventListener('mousedown', onStart);
+  document.addEventListener('mousemove', e => { if (dragging) onMove(e); });
+  document.addEventListener('mouseup', onEnd);
+}
+
+// ── DRAGGABLE MAP ──
+function initDraggableMap() {
+  const mapBg = document.querySelector('#s3 .map-bg');
+  if (!mapBg) return;
+
+  // Map offset in px (simulated pan)
+  let offsetX = 0, offsetY = 0;
+  let startX = 0, startY = 0, dragging = false;
+
+  // Limits: ~5-6 mile radius at ~100px/mile
+  const MAX = 500;
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+  function applyTransform() {
+    // Move the streets SVG and all pins together
+    const streets = mapBg.querySelector('.map-streets');
+    const pins = mapBg.querySelectorAll('.map-pin');
+    const userDot = mapBg.querySelector('.user-dot');
+    const loc = mapBg.querySelector('.map-location');
+    if (streets) streets.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+    pins.forEach(p => {
+      const baseLeft = parseFloat(p.dataset.baseLeft || (p.dataset.baseLeft = p.style.left));
+      const baseTop  = parseFloat(p.dataset.baseTop  || (p.dataset.baseTop  = p.style.top));
+      p.style.left = (baseLeft + offsetX) + 'px';
+      p.style.top  = (baseTop  + offsetY) + 'px';
+    });
+    if (userDot) {
+      const bl = parseFloat(userDot.dataset.baseLeft || (userDot.dataset.baseLeft = userDot.style.left));
+      const bt = parseFloat(userDot.dataset.baseTop  || (userDot.dataset.baseTop  = userDot.style.top));
+      userDot.style.left = (bl + offsetX) + 'px';
+      userDot.style.top  = (bt + offsetY) + 'px';
+    }
+  }
+
+  function onStart(e) {
+    startX = e.touches ? e.touches[0].clientX : e.clientX;
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    dragging = true;
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    offsetX = clamp(offsetX + (x - startX), -MAX, MAX);
+    offsetY = clamp(offsetY + (y - startY), -MAX, MAX);
+    startX = x; startY = y;
+    applyTransform();
+  }
+  function onEnd() { dragging = false; }
+
+  mapBg.addEventListener('touchstart', onStart, { passive: true });
+  mapBg.addEventListener('touchmove', onMove, { passive: true });
+  mapBg.addEventListener('touchend', onEnd);
+  mapBg.addEventListener('mousedown', onStart);
+  document.addEventListener('mousemove', e => { if (dragging) onMove(e); });
+  document.addEventListener('mouseup', onEnd);
+}
+function toggleFeedSave(btn) {
+  const isSaved = btn.classList.toggle('saved');
+  const path = btn.querySelector('path');
+  if (isSaved) {
+    path.setAttribute('fill', 'var(--green)');
+    path.setAttribute('stroke', 'var(--green)');
+  } else {
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'currentColor');
+  }
+  const toast = document.getElementById('feed-save-toast');
+  toast.querySelector('.save-toast-text').textContent = isSaved
+    ? "Saved! We'll remind you before the show."
+    : "Removed from saved events.";
+  toast.querySelector('.save-toast-icon').textContent = isSaved ? '🔖' : '✕';
+  toast.classList.add('visible');
+  clearTimeout(feedToastTimer);
+  feedToastTimer = setTimeout(() => toast.classList.remove('visible'), 2800);
+}
+
+// FEED SHARE SHEET
+function openFeedShare() {
+  document.getElementById('feed-share-overlay').classList.add('visible');
+  document.getElementById('feed-share-sheet').classList.add('visible');
+}
+function closeFeedShare() {
+  document.getElementById('feed-share-overlay').classList.remove('visible');
+  document.getElementById('feed-share-sheet').classList.remove('visible');
+}
+</script>
+<script>
+if ("serviceWorker" in navigator) { window.addEventListener("load", () => { navigator.serviceWorker.register("/sw.js"); }); }
 </script>
 </body>
 </html>
