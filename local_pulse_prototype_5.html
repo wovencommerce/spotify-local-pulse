@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local Pulse · Spotify Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #121212;
+  --surface: #181818;
+  --card: #1e1e1e;
+  --card2: #282828;
+  --card3: #323232;
+  --green: #1DB954;
+  --amber: #F59E0B;
+  --blue: #3B82F6;
+  --text: #ffffff;
+  --text-muted: #ffffff;
+  --text-dim: #ffffff;
+  --border: rgba(255,255,255,0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; color:inherit; }
+*, *::before, *::after { color: inherit; }
+body {
+  background:#0d0d1a;
+  display:flex; justify-content:center; align-items:center;
+  min-height:100vh; font-family:'DM Sans',sans-serif;
+  color: #ffffff;
+}
+.phone {
+  width:390px; height:844px; background:var(--bg);
+  border-radius:52px; overflow:hidden; position:relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 0 0 10px #0a0a0a,
+    0 0 0 11px rgba(255,255,255,0.06), 0 50px 120px rgba(0,0,0,0.9),
+    0 0 100px rgba(29,185,84,0.08);
+  color: #ffffff;
+}
+.screen {
+  position:absolute; top:0; left:0; width:100%; height:100%;
+  background:var(--bg); transform:translateX(100%);
+  transition:transform 0.35s cubic-bezier(0.4,0,0.2,1); overflow:hidden;
+}
+.screen.active { transform:translateX(0); }
+.screen.slide-out { transform:translateX(-28%); }
+#s1 { transform:translateX(0); }
+
+.status {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:14px 26px 6px; font-size:12px; font-weight:700;
+  color:var(--text); z-index:20; position:relative;
+}
+.status-r { display:flex; gap:5px; align-items:center; font-size:11px; }
+
+.bnav {
+  position:absolute; bottom:0; left:0; right:0; height:72px;
+  background:#0e0e0e; border-top:1px solid var(--border);
+  display:flex; align-items:flex-start; justify-content:space-around;
+  padding:10px 0 0; z-index:30;
+}
+.ni {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  font-size:10px; font-weight:600; color:#ffffff;
+  flex:1; cursor:pointer; transition:color 0.15s; padding-top:2px;
+}
+.ni.active { color:var(--green); }
+.ni svg { width:22px; height:22px; }
+
+/* ── SCREEN 1 ── */
+.s1-scroll { height:772px; overflow-y:auto; padding-bottom:80px; }
+.s1-scroll::-webkit-scrollbar { display:none; }
+.s1-topbar { display:flex; justify-content:space-between; align-items:center; padding:4px 20px 18px; }
+.s1-greeting { font-size:21px; font-weight:800; }
+.s1-icons { display:flex; gap:10px; }
+.s1-icon { width:34px; height:34px; background:var(--card2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; }
+.s1-avatar { width:34px; height:34px; background:var(--green); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#000; }
+.pill-row { display:flex; gap:8px; padding:0 20px 20px; overflow-x:auto; }
+.pill-row::-webkit-scrollbar { display:none; }
+.pill { background:var(--card2); border-radius:20px; padding:8px 16px; font-size:13px; font-weight:600; white-space:nowrap; flex-shrink:0; cursor:pointer; }
+.pill.active { background:var(--text); color:#000; }
+.quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 20px 24px; }
+.qc { background:var(--card2); border-radius:6px; display:flex; align-items:center; height:56px; overflow:hidden; cursor:pointer; transition:background 0.15s; }
+.qc:active { background:var(--card3); }
+.qt { width:56px; height:56px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.qt-g{background:var(--green);} .qt-p{background:#7c3aed;} .qt-o{background:#ea580c;}
+.qt-b{background:#1d4ed8;} .qt-pk{background:#db2777;} .qt-t{background:#0d9488;}
+.ql { font-size:13px; font-weight:700; padding:0 10px; line-height:1.3; }
+
+/* HOME LP BANNER */
+.lp-banner {
+  margin:0 20px 24px; border-radius:14px; overflow:hidden;
+  position:relative; cursor:pointer; border:1px solid rgba(29,185,84,0.2);
+  background:#141e18; display:flex; height:160px; transition:transform 0.15s;
+}
+.lp-banner:active { transform:scale(0.98); }
+.lp-banner-left { padding:18px 16px 18px 18px; position:relative; z-index:2; width:57%; display:flex; flex-direction:column; justify-content:space-between; }
+.lp-tag { display:inline-block; background:var(--green); color:#000; font-size:9px; font-weight:800; padding:3px 9px; border-radius:20px; margin-bottom:8px; letter-spacing:0.8px; width:fit-content; }
+.lp-banner-title { font-size:20px; font-weight:800; margin-bottom:5px; color:#fff; line-height:1.15; }
+.lp-banner-sub { font-size:11px; color:#ffffff; margin-bottom:14px; line-height:1.5; flex:1; }
+.lp-btn { background:var(--green); color:#000; border:none; border-radius:20px; padding:9px 16px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; width:fit-content; }
+.lp-banner-map { position:absolute; right:0; top:0; bottom:0; width:46%; overflow:hidden; }
+.lp-banner-map svg { width:100%; height:100%; }
+
+.sec-hdr { display:flex; justify-content:space-between; align-items:center; padding:0 20px 14px; }
+.sec-title { font-size:17px; font-weight:800; }
+.sec-all { font-size:12px; color:var(--text-muted); font-weight:600; }
+.horiz { display:flex; gap:14px; padding:0 20px 24px; overflow-x:auto; }
+.horiz::-webkit-scrollbar { display:none; }
+.artist-card { flex-shrink:0; width:108px; text-align:center; }
+.artist-ava { width:108px; height:108px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:36px; margin-bottom:9px; }
+.av1{background:linear-gradient(135deg,#1a472a,#2d6a4f);} .av2{background:linear-gradient(135deg,#4a1942,#9d174d);}
+.av3{background:linear-gradient(135deg,#1e3a5f,#1d4ed8);} .av4{background:linear-gradient(135deg,#3d1a00,#c2410c);}
+.artist-n { font-size:12px; font-weight:700; }
+.artist-s { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.album-card { flex-shrink:0; width:138px; }
+.album-img { width:138px; height:138px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:46px; margin-bottom:9px; }
+.al1{background:linear-gradient(135deg,#064e3b,#1DB954);} .al2{background:linear-gradient(135deg,#1e1b4b,#7c3aed);}
+.al3{background:linear-gradient(135deg,#431407,#ea580c);} .al4{background:linear-gradient(135deg,#0c1445,#1d4ed8);}
+.album-n { font-size:13px; font-weight:700; }
+.album-s { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.now-playing { position:absolute; bottom:72px; left:10px; right:10px; background:#2a2a2a; border-radius:10px; padding:10px 14px; display:flex; align-items:center; gap:12px; z-index:20; }
+.np-art { width:36px; height:36px; background:var(--green); border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.np-info { flex:1; }
+.np-t { font-size:13px; font-weight:700; }
+.np-a { font-size:11px; color:var(--text-muted); }
+.np-ctrl { display:flex; gap:16px; align-items:center; color:#fff; font-size:18px; }
+
+/* ── SCREEN 2 ── */
+.s2-scroll { height:772px; overflow-y:auto; padding-bottom:80px; }
+.s2-scroll::-webkit-scrollbar { display:none; }
+.s2-hdr { display:flex; align-items:center; gap:14px; padding:6px 20px 16px; }
+.back-btn { width:32px; height:32px; background:var(--card2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; flex-shrink:0; color:#fff; border:1px solid var(--border); }
+.s2-htitle { font-size:21px; font-weight:800; }
+.s2-hero { margin:0 20px 20px; height:155px; border-radius:12px; background:linear-gradient(140deg,#0a1f12,#1a472a 60%,#0d3320); position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; padding:16px; border:1px solid rgba(29,185,84,0.15); }
+.s2-hero::before { content:'🎪'; position:absolute; top:10px; right:14px; font-size:60px; opacity:0.08; }
+.s2-hero-tag { display:inline-block; background:rgba(29,185,84,0.15); color:var(--green); font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px; margin-bottom:7px; width:fit-content; border:1px solid rgba(29,185,84,0.25); }
+.s2-hero-title { font-size:21px; font-weight:800; margin-bottom:3px; }
+.s2-hero-sub { font-size:12px; color:#ffffff; }
+.tab-row { display:flex; margin:0 20px 20px; border-bottom:1px solid var(--border); }
+.tab { flex:1; text-align:center; font-size:13px; font-weight:600; color:#ffffff; padding-bottom:12px; position:relative; cursor:pointer; }
+.tab.active { color:var(--text); }
+.tab.active::after { content:''; position:absolute; bottom:-1px; left:15%; right:15%; height:2px; background:var(--green); border-radius:2px; }
+.evrow { display:flex; gap:12px; padding:0 20px 24px; overflow-x:auto; }
+.evrow::-webkit-scrollbar { display:none; }
+.evc { flex-shrink:0; width:148px; background:var(--card2); border-radius:10px; overflow:hidden; cursor:pointer; transition:transform 0.15s; }
+.evc:active { transform:scale(0.97); }
+.evc-img { width:148px; height:106px; display:flex; align-items:center; justify-content:center; font-size:40px; }
+.ec1{background:linear-gradient(135deg,#1a472a,#1DB954);} .ec2{background:linear-gradient(135deg,#4a1942,#9d174d);}
+.ec3{background:linear-gradient(135deg,#1e3a5f,#1d4ed8);} .ec4{background:linear-gradient(135deg,#3d1f00,#c2410c);}
+.evc-info { padding:10px 12px; }
+.evc-name { font-size:13px; font-weight:700; margin-bottom:2px; }
+.evc-venue { font-size:11px; color:var(--text-muted); margin-bottom:5px; }
+.evc-date { font-size:11px; color:var(--green); font-weight:700; }
+
+.lp-hub {
+  margin:0 20px 24px;
+  background: linear-gradient(135deg, #0a1f12 0%, #0f2d1a 40%, #162b1e 100%);
+  border-radius:16px; overflow:hidden;
+  border:1.5px solid rgba(29,185,84,0.45);
+  box-shadow: 0 0 24px rgba(29,185,84,0.12), 0 4px 20px rgba(0,0,0,0.4);
+  position: relative;
+}
+.lp-hub::before {
+  content: '';
+  position: absolute; top: -40px; right: -40px;
+  width: 140px; height: 140px;
+  background: radial-gradient(circle, rgba(29,185,84,0.18) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.lp-hub-hdr { display:flex; justify-content:space-between; align-items:center; padding:16px 16px 12px; }
+.lp-hub-tag { display:inline-block; background:var(--green); color:#000; font-size:9px; font-weight:800; padding:3px 10px; border-radius:20px; margin-bottom:5px; letter-spacing:0.8px; }
+.lp-hub-title { font-size:18px; font-weight:800; color:#fff; letter-spacing:-0.2px; }
+.lp-hub-sub { font-size:11px; color:rgba(255,255,255,0.55); margin-top:3px; }
+.lp-hub-arrow {
+  width:36px; height:36px; background:var(--green); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; color:#000; font-weight:800; flex-shrink:0;
+  box-shadow: 0 2px 10px rgba(29,185,84,0.4);
+}
+.lp-mini-row { display:flex; gap:8px; padding:0 16px 16px; overflow-x:auto; }
+.lp-mini-row::-webkit-scrollbar { display:none; }
+.lp-mini { flex-shrink:0; width:148px; background:rgba(255,255,255,0.06); border-radius:12px; padding:12px; border:1px solid rgba(29,185,84,0.15); cursor:pointer; }
+.lp-mini-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; }
+.lp-mini-em { font-size:24px; }
+.lp-match-sm { background:var(--green); color:#000; font-size:10px; font-weight:800; padding:2px 8px; border-radius:10px; }
+.lp-mini-name { font-size:13px; font-weight:700; color:#fff; margin-bottom:2px; }
+.lp-mini-venue { font-size:10px; color:#ffffff; margin-bottom:2px; }
+.lp-mini-dist { font-size:10px; color:#ffffff; margin-bottom:8px; }
+.lp-mini-acts { display:flex; gap:6px; }
+.lp-act { flex:1; height:26px; background:rgba(255,255,255,0.07); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#ffffff; transition:background 0.15s; }
+.lp-act:active { background:rgba(255,255,255,0.16); }
+
+.nearby-list { padding:0 20px 8px; }
+.nearby-item { display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--border); }
+.nearby-thumb { width:50px; height:50px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.nt1{background:linear-gradient(135deg,#064e3b,#059669);} .nt2{background:linear-gradient(135deg,#1e1b4b,#4338ca);} .nt3{background:linear-gradient(135deg,#4c0519,#be185d);}
+.nearby-info { flex:1; }
+.nearby-name { font-size:13px; font-weight:700; margin-bottom:2px; }
+.nearby-det { font-size:11px; color:var(--text-muted); }
+.nearby-r { text-align:right; }
+.nearby-date { font-size:11px; color:var(--green); font-weight:700; }
+.nearby-dist { font-size:10px; color:var(--text-muted); margin-top:2px; }
+
+/* ── SCREEN 3 MAP ── */
+.map-wrap { position:absolute; top:0; left:0; right:0; height:334px; overflow:hidden; }
+.map-bg { width:100%; height:100%; background:#1a2035; position:relative; }
+.map-streets { position:absolute; top:0; left:0; width:100%; height:100%; }
+.map-hdr { position:absolute; top:0; left:0; right:0; z-index:8; padding:36px 16px 0; background:linear-gradient(to bottom,rgba(26,32,53,0.95) 55%,transparent); }
+.map-hdr-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.map-hdr-left { display:flex; align-items:center; gap:12px; }
+.map-hdr-back { width:32px; height:32px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff; flex-shrink:0; }
+.map-hdr-title { font-size:18px; font-weight:800; color:#fff; }
+.map-hdr-icons { display:flex; gap:10px; }
+.map-hdr-icon { width:30px; height:30px; background:rgba(255,255,255,0.08); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; color:#fff; }
+.filter-row { display:flex; gap:7px; overflow-x:auto; padding-bottom:4px; }
+.filter-row::-webkit-scrollbar { display:none; }
+.fchip { display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.1); border-radius:20px; padding:6px 12px; font-size:12px; font-weight:600; white-space:nowrap; flex-shrink:0; cursor:pointer; color:#fff; border:1px solid rgba(255,255,255,0.1); font-family:'DM Sans',sans-serif; }
+.fchip.active { background:var(--green); color:#000; border-color:var(--green); }
+.fchip-dot { width:6px; height:6px; background:var(--green); border-radius:50%; }
+.fchip.active .fchip-dot { background:#000; }
+.map-location { position:absolute; bottom:14px; left:16px; z-index:7; font-size:11px; color:#ffffff; font-weight:600; }
+.user-dot { position:absolute; z-index:5; width:13px; height:13px; background:#3B82F6; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 5px rgba(59,130,246,0.22); }
+.map-pin { position:absolute; z-index:6; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:transform 0.15s; }
+.map-pin:active { transform:scale(0.93); }
+.pin-label { display:flex; align-items:center; gap:4px; padding:5px 10px 5px 7px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; box-shadow:0 3px 12px rgba(0,0,0,0.5); }
+.pin-label svg { width:12px; height:12px; flex-shrink:0; }
+.pin-label.green { background:var(--green); color:#000; }
+.pin-label.amber { background:var(--amber); color:#000; }
+.pin-label.dim { background:rgba(40,40,55,0.92); color:#fff; border:1px solid rgba(255,255,255,0.18); }
+.pin-tail { width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; margin-top:-1px; }
+.pin-tail.green { border-top:7px solid var(--green); }
+.pin-tail.amber { border-top:7px solid var(--amber); }
+.pin-tail.dim { border-top:7px solid rgba(40,40,55,0.92); }
+
+/* FEED PANEL */
+.feed-panel { position:absolute; bottom:0; left:0; right:0; height:510px; background:var(--bg); border-top-left-radius:20px; border-top-right-radius:20px; z-index:10; }
+.feed-handle { width:34px; height:4px; background:rgba(255,255,255,0.15); border-radius:2px; margin:10px auto 0; }
+.feed-hdr { display:flex; justify-content:space-between; align-items:center; padding:10px 18px 0; }
+.feed-section-title { font-size:16px; font-weight:800; color:#fff; }
+.feed-count { font-size:11px; color:var(--text-muted); background:var(--card2); padding:3px 10px; border-radius:10px; }
+.feed-chips { display:flex; gap:7px; padding:8px 18px 4px; overflow-x:auto; }
+.feed-chips::-webkit-scrollbar { display:none; }
+.feed-chip { flex-shrink:0; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid rgba(255,255,255,0.12); color:#fff; background:rgba(255,255,255,0.06); font-family:'DM Sans',sans-serif; }
+.feed-chip.active { background:var(--green); color:#000; border-color:var(--green); }
+.feed-scroll { overflow-y:auto; height:390px; padding:6px 16px 16px; }
+.feed-scroll::-webkit-scrollbar { display:none; }
+
+/* FEED CARD */
+.fc { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px; background:var(--card); margin-bottom:8px; cursor:pointer; transition:background 0.15s; }
+.fc:active { background:var(--card2); }
+.fc.fc-top { background:#161f18; border:1px solid rgba(29,185,84,0.2); }
+.fc-art { width:50px; height:50px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.fca1{background:linear-gradient(135deg,#064e3b,#1DB954);} .fca2{background:linear-gradient(135deg,#3d1f00,#c2410c);}
+.fca3{background:linear-gradient(135deg,#1e1b4b,#4338ca);} .fca4{background:linear-gradient(135deg,#064e3b,#059669);}
+.fca5{background:linear-gradient(135deg,#4c0519,#be185d);}
+.fc-info { flex:1; min-width:0; }
+.fc-name { font-size:14px; font-weight:700; margin-bottom:1px; color:#fff; }
+.fc-venue { font-size:11px; color:var(--text-muted); margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fc-tags { display:flex; gap:5px; flex-wrap:wrap; }
+.tag { font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; display:inline-flex; align-items:center; }
+.tag-green { background:rgba(29,185,84,0.18); color:var(--green); border:1px solid rgba(29,185,84,0.3); }
+.tag-amber { background:rgba(245,158,11,0.15); color:var(--amber); border:1px solid rgba(245,158,11,0.3); }
+.tag-blue  { background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); }
+.tag-white { background:rgba(255,255,255,0.08); color:#ffffff; border:1px solid rgba(255,255,255,0.12); }
+.tag-red   { background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); }
+.fc-r { display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex-shrink:0; }
+.fc-dist { font-size:11px; color:var(--text-muted); font-weight:600; }
+.fc-acts { display:flex; gap:6px; }
+.act-btn { width:28px; height:28px; background:rgba(255,255,255,0.07); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#ffffff; transition:background 0.15s; }
+.act-btn:active { background:rgba(255,255,255,0.18); }
+
+/* ── SCREEN 4 ── */
+.s4-hero {
+  height: 220px; position:relative; overflow:hidden;
+  background: linear-gradient(180deg, #0d3320 0%, #1a472a 50%, #0a1f12 100%);
+}
+.s4-hero-bg {
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(29,185,84,0.25) 0%, transparent 65%);
+}
+.s4-back {
+  position:absolute; top:44px; left:18px; z-index:5;
+  display:flex; align-items:center; gap:6px;
+  font-size:14px; font-weight:700; color:#fff; cursor:pointer;
+}
+.s4-back svg { width:18px; height:18px; }
+.s4-hero-content {
+  position:absolute; bottom:22px; left:20px; right:20px; z-index:3;
+}
+.s4-match-pill {
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--green); color:#000;
+  font-size:11px; font-weight:800;
+  padding:4px 12px; border-radius:20px;
+  margin-bottom:10px;
+}
+.s4-match-dot { width:6px; height:6px; background:#000; border-radius:50%; }
+.s4-play-row { display:flex; align-items:center; gap:14px; margin-bottom:4px; }
+.s4-play-btn {
+  width:42px; height:42px; background:rgba(255,255,255,0.15);
+  border-radius:50%; border:2px solid rgba(255,255,255,0.3);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; flex-shrink:0;
+}
+.s4-play-btn svg { width:18px; height:18px; color:#fff; margin-left:2px; }
+.s4-name { font-size:30px; font-weight:800; color:#fff; line-height:1.05; letter-spacing:-0.5px; }
+.s4-sub { font-size:13px; color:rgba(255,255,255,0.65); margin-top:3px; }
+.s4-fade { position:absolute; bottom:0; left:0; right:0; height:40px; background:linear-gradient(to bottom,transparent,var(--bg)); z-index:2; }
+
+.s4-scroll {
+  height: 442px;
+  overflow-y: auto;
+  padding: 0 0 16px;
+  position: relative;
+}
+.s4-scroll::-webkit-scrollbar { display:none; }
+
+/* DETAIL ROWS — list style like screenshot */
+.s4-details { padding:16px 20px 0; margin-bottom:4px; }
+.s4-detail-row {
+  display:flex; align-items:flex-start; gap:14px;
+  padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.s4-detail-row:last-child { border-bottom:none; }
+.s4-detail-icon {
+  width:36px; height:36px; background:var(--card2);
+  border-radius:10px; display:flex; align-items:center;
+  justify-content:center; font-size:16px; flex-shrink:0; margin-top:1px;
+}
+.s4-detail-body { flex:1; }
+.s4-detail-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:#ffffff; opacity:0.5; margin-bottom:3px; }
+.s4-detail-val { font-size:14px; font-weight:700; color:#fff; line-height:1.3; }
+.s4-detail-sub { font-size:12px; color:#fff; opacity:0.6; margin-top:1px; }
+
+/* WHY SPOTIFY PICKED THIS */
+.s4-why {
+  margin:16px 20px; padding:16px;
+  background:var(--card); border-radius:14px;
+  border:1px solid rgba(255,255,255,0.06);
+}
+.s4-why-title {
+  font-size:10px; font-weight:800; text-transform:uppercase;
+  letter-spacing:0.8px; color:var(--green); margin-bottom:14px;
+}
+.s4-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.s4-bar-row:last-child { margin-bottom:0; }
+.s4-bar-label { font-size:12px; font-weight:600; color:#fff; width:90px; flex-shrink:0; }
+.s4-bar-track {
+  flex:1; height:4px; background:rgba(255,255,255,0.1);
+  border-radius:2px; overflow:hidden;
+}
+.s4-bar-fill { height:100%; background:var(--green); border-radius:2px; }
+.s4-bar-pct { font-size:12px; font-weight:700; color:var(--green); width:32px; text-align:right; flex-shrink:0; }
+
+/* FANS ALSO LOVE */
+.s4-fans { padding:0 20px 16px; }
+.s4-fans-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:#fff; opacity:0.5; margin-bottom:12px; }
+.s4-fans-row { display:flex; gap:8px; overflow-x:auto; }
+.s4-fans-row::-webkit-scrollbar { display:none; }
+.s4-fan-chip {
+  display:flex; align-items:center; gap:8px;
+  background:var(--card2); border-radius:20px;
+  padding:6px 12px 6px 6px; flex-shrink:0; cursor:pointer;
+  border:1px solid rgba(255,255,255,0.06);
+}
+.s4-fan-ava {
+  width:26px; height:26px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; flex-shrink:0;
+}
+.fav1 { background:linear-gradient(135deg,#4a1942,#9d174d); }
+.fav2 { background:linear-gradient(135deg,#1e1b4b,#4338ca); }
+.fav3 { background:linear-gradient(135deg,#064e3b,#059669); }
+.s4-fan-name { font-size:12px; font-weight:700; color:#fff; }
+
+/* API SOURCE BADGES */
+.s4-sources { display:flex; gap:8px; padding:0 20px 16px; }
+.s4-source-badge {
+  display:flex; align-items:center; gap:5px;
+  font-size:11px; font-weight:600; color:var(--green);
+}
+.s4-source-dot { width:7px; height:7px; background:var(--green); border-radius:50%; }
+
+/* TWO BUTTON CTA — fixed above nav */
+.s4-cta {
+  position: absolute;
+  bottom: 72px; left: 0; right: 0;
+  padding: 10px 20px 12px;
+  background: var(--bg);
+  border-top: 1px solid rgba(255,255,255,0.07);
+  z-index: 8;
+}
+.s4-cta-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.btn-tickets {
+  flex: 1; background:var(--green); color:#000; border:none;
+  border-radius:30px; padding:15px;
+  font-size:15px; font-weight:800; cursor:pointer;
+  font-family:'DM Sans',sans-serif; transition:transform 0.15s;
+}
+.btn-tickets:active { transform:scale(0.98); }
+.btn-icon-cta {
+  width:50px; height:50px; flex-shrink:0;
+  background:var(--card2); color:#fff; border:none;
+  border-radius:50%; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition:background 0.15s;
+}
+.btn-icon-cta:active { background:var(--card3); }
+
+/* SAVE BUTTON SAVED STATE */
+.btn-icon-cta.saved {
+  background: rgba(29,185,84,0.15);
+  border-color: rgba(29,185,84,0.5) !important;
+}
+.btn-icon-cta.saved svg { stroke: var(--green); }
+
+/* SAVE TOAST */
+.save-toast {
+  position: absolute;
+  bottom: 185px; left: 20px; right: 20px;
+  background: #1a2e1f;
+  border: 1px solid rgba(29,185,84,0.4);
+  border-radius: 14px;
+  padding: 13px 16px;
+  display: flex; align-items: center; gap: 10px;
+  z-index: 50;
+  opacity: 0; transform: translateY(12px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+.save-toast.visible { opacity: 1; transform: translateY(0); }
+.save-toast-icon { font-size: 18px; flex-shrink: 0; }
+.save-toast-text { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.4; }
+
+/* SHARE OVERLAY */
+.share-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 60;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.share-overlay.visible { opacity: 1; pointer-events: all; }
+
+/* SHARE SHEET */
+.share-sheet {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: #1a1a1a;
+  border-top-left-radius: 24px; border-top-right-radius: 24px;
+  padding: 0 20px 30px;
+  z-index: 70;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.share-sheet.visible { transform: translateY(0); }
+.share-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 12px auto 16px; }
+.share-title { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 20px; text-align: center; }
+.share-friends-label, .share-socials-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: rgba(255,255,255,0.4); margin-bottom: 12px;
+}
+.share-friends-row { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; }
+.share-friends-row::-webkit-scrollbar { display: none; }
+.share-friend { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; cursor: pointer; }
+.share-friend-ava {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 800; color: #fff;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+.share-friend:active .share-friend-ava { transform: scale(0.9); }
+.share-friend-ava.sent { box-shadow: 0 0 0 2.5px var(--green); }
+.share-friend-name { font-size: 11px; font-weight: 600; color: #fff; }
+.share-divider { height: 1px; background: rgba(255,255,255,0.07); margin-bottom: 16px; }
+.share-socials { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; }
+.share-socials::-webkit-scrollbar { display: none; }
+.share-social-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; cursor: pointer; }
+.share-social-icon {
+  width: 46px; height: 46px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900; color: #fff;
+  transition: transform 0.15s;
+}
+.share-social-btn:active .share-social-icon { transform: scale(0.9); }
+.share-social-name { font-size: 11px; font-weight: 600; color: #fff; }
+.share-cancel {
+  width: 100%; background: var(--card2); color: #fff; border: none;
+  border-radius: 14px; padding: 14px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: background 0.15s;
+}
+.share-cancel:active { background: var(--card3); }
+</style>
+</head>
+<body>
+<div class="phone">
+
+<!-- ══ SCREEN 1: HOME ══ -->
+<div class="screen active" id="s1">
+  <div class="status"><span>9:41</span><div class="status-r"><span>●●●</span><span> WiFi</span><span> 🔋</span></div></div>
+  <div class="s1-scroll">
+    <div class="s1-topbar">
+      <div class="s1-greeting">Good evening</div>
+      <div class="s1-icons"><div class="s1-icon">🔔</div><div class="s1-icon">⏱</div><div class="s1-avatar">K</div></div>
+    </div>
+    <div class="pill-row"><div class="pill active">All</div><div class="pill">Music</div><div class="pill">Podcasts</div><div class="pill">Audiobooks</div></div>
+    <div class="quick-grid">
+      <div class="qc"><div class="qt qt-g">💚</div><div class="ql">Liked Songs</div></div>
+      <div class="qc"><div class="qt qt-p">🎵</div><div class="ql">Discover Weekly</div></div>
+      <div class="qc"><div class="qt qt-o">🔥</div><div class="ql">Daily Mix 1</div></div>
+      <div class="qc"><div class="qt qt-b">🎧</div><div class="ql">Release Radar</div></div>
+      <div class="qc"><div class="qt qt-pk">🌙</div><div class="ql">Late Night Vibes</div></div>
+      <div class="qc" onclick="goTo('s2')"><div class="qt qt-t">🎪</div><div class="ql">Live Events</div></div>
+    </div>
+
+    <div class="lp-banner" onclick="goTo('s3')">
+      <div class="lp-banner-left">
+        <div class="lp-tag">✦ NEW</div>
+        <div class="lp-banner-title">Local Pulse</div>
+        <div class="lp-banner-sub">Artists near you,<br>matched to your taste</div>
+        <button class="lp-btn">Explore →</button>
+      </div>
+      <div class="lp-banner-map">
+        <svg viewBox="0 0 185 130" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+          <rect width="185" height="130" fill="#1a2035"/>
+          <line x1="0" y1="35" x2="185" y2="35" stroke="#4a6fa5" stroke-width="1.2"/>
+          <line x1="0" y1="65" x2="185" y2="65" stroke="#4a6fa5" stroke-width="0.6"/>
+          <line x1="0" y1="95" x2="185" y2="95" stroke="#4a6fa5" stroke-width="1.2"/>
+          <line x1="38" y1="0" x2="38" y2="130" stroke="#4a6fa5" stroke-width="0.6"/>
+          <line x1="92" y1="0" x2="92" y2="130" stroke="#4a6fa5" stroke-width="1.2"/>
+          <line x1="147" y1="0" x2="147" y2="130" stroke="#4a6fa5" stroke-width="0.6"/>
+          <line x1="0" y1="115" x2="185" y2="18" stroke="#4a6fa5" stroke-width="1"/>
+          <rect x="40" y="37" width="50" height="26" fill="rgba(74,111,165,0.1)" rx="1"/>
+          <rect x="94" y="67" width="51" height="26" fill="rgba(74,111,165,0.1)" rx="1"/>
+          <rect x="40" y="67" width="50" height="26" fill="rgba(74,111,165,0.1)" rx="1"/>
+          <circle cx="92" cy="72" r="5" fill="#3B82F6"/>
+          <circle cx="92" cy="72" r="9" fill="rgba(59,130,246,0.2)"/>
+          <!-- green pin -->
+          <rect x="30" y="19" width="60" height="17" rx="8.5" fill="#1DB954"/>
+          <text x="60" y="31" text-anchor="middle" font-size="7.5" font-weight="800" fill="#000" font-family="sans-serif">📍 Top match</text>
+          <polygon points="60,36 57,42 63,42" fill="#1DB954"/>
+          <!-- amber pin -->
+          <rect x="105" y="44" width="55" height="16" rx="8" fill="#F59E0B"/>
+          <text x="132" y="55" text-anchor="middle" font-size="7" font-weight="800" fill="#000" font-family="sans-serif">📍 Good match</text>
+          <polygon points="132,60 129,66 135,66" fill="#F59E0B"/>
+          <!-- dim pin -->
+          <rect x="42" y="80" width="42" height="14" rx="7" fill="rgba(50,60,90,0.92)" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+          <text x="63" y="90" text-anchor="middle" font-size="6.5" fill="white" font-family="sans-serif">88% match</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="sec-hdr"><div class="sec-title">Your top artists</div><div class="sec-all">See all</div></div>
+    <div class="horiz">
+      <div class="artist-card"><div class="artist-ava av1">🎸</div><div class="artist-n">Dry Cleaning</div><div class="artist-s">Artist</div></div>
+      <div class="artist-card"><div class="artist-ava av2">🎤</div><div class="artist-n">Peaches</div><div class="artist-s">Artist</div></div>
+      <div class="artist-card"><div class="artist-ava av3">🎹</div><div class="artist-n">Channel One</div><div class="artist-s">Artist</div></div>
+      <div class="artist-card"><div class="artist-ava av4">🥁</div><div class="artist-n">Boko Yout</div><div class="artist-s">Artist</div></div>
+    </div>
+    <div class="sec-hdr"><div class="sec-title">Recently played</div><div class="sec-all">See all</div></div>
+    <div class="horiz">
+      <div class="album-card"><div class="album-img al1">🌿</div><div class="album-n">Dub Sessions</div><div class="album-s">Playlist</div></div>
+      <div class="album-card"><div class="album-img al2">🌌</div><div class="album-n">Late Night Mix</div><div class="album-s">Playlist</div></div>
+      <div class="album-card"><div class="album-img al3">🔥</div><div class="album-n">Punk Classics</div><div class="album-s">Playlist</div></div>
+      <div class="album-card"><div class="album-img al4">🎭</div><div class="album-n">Discover Weekly</div><div class="album-s">Spotify</div></div>
+    </div>
+  </div>
+  <div class="now-playing">
+    <div class="np-art">🎵</div>
+    <div class="np-info"><div class="np-t">Common People</div><div class="np-a">Pulp</div></div>
+    <div class="np-ctrl"><span>♡</span><span>▶</span><span>⏭</span></div>
+  </div>
+  <div class="bnav">
+    <div class="ni active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
+    <div class="ni" onclick="goTo('s3')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg><span>Events</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Library</span></div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 2: LIVE EVENTS ══ -->
+<div class="screen" id="s2">
+  <div class="status"><span>9:41</span><div class="status-r"><span>●●●</span><span> WiFi</span><span> 🔋</span></div></div>
+  <div class="s2-scroll">
+    <div class="s2-hdr"><div class="back-btn" onclick="goBack('s1')">‹</div><div class="s2-htitle">Live Events</div></div>
+    <div class="s2-hero">
+      <div class="s2-hero-tag">✦ FEATURED</div>
+      <div class="s2-hero-title">Live Events Hub</div>
+      <div class="s2-hero-sub">Shows, tours & local discoveries near you</div>
+    </div>
+    <div class="tab-row"><div class="tab active">For You</div><div class="tab">Following</div><div class="tab">Nearby</div><div class="tab">Festivals</div></div>
+    <div class="sec-hdr" style="padding:0 20px 12px;"><div class="sec-title">From artists you follow</div><div class="sec-all">See all</div></div>
+    <div class="evrow">
+      <div class="evc"><div class="evc-img ec1">🎸</div><div class="evc-info"><div class="evc-name">Dry Cleaning</div><div class="evc-venue">Rough Trade NYC</div><div class="evc-date">Apr 18 · $22</div></div></div>
+      <div class="evc"><div class="evc-img ec2">🎤</div><div class="evc-info"><div class="evc-name">Peaches</div><div class="evc-venue">Elsewhere, Brooklyn</div><div class="evc-date">Apr 22 · $28</div></div></div>
+      <div class="evc"><div class="evc-img ec3">🎹</div><div class="evc-info"><div class="evc-name">Circuit des Yeux</div><div class="evc-venue">Le Poisson Rouge</div><div class="evc-date">May 3 · $22</div></div></div>
+      <div class="evc"><div class="evc-img ec4">🥁</div><div class="evc-info"><div class="evc-name">Warmduscher</div><div class="evc-venue">Music Hall of WB</div><div class="evc-date">May 9 · $18</div></div></div>
+    </div>
+    <div class="lp-hub" onclick="goTo('s3')">
+      <div class="lp-hub-hdr">
+        <div><div class="lp-hub-tag">✦ NEW · Discover Emerging Artists</div><div class="lp-hub-title">Local Pulse</div><div class="lp-hub-sub">Matched to your taste · Tonight</div></div>
+        <div class="lp-hub-arrow">→</div>
+      </div>
+      <div class="lp-mini-row">
+        <div class="lp-mini" onclick="event.stopPropagation();goTo('s4')">
+          <div class="lp-mini-top"><div class="lp-mini-em">🌿</div><div class="lp-match-sm">97%</div></div>
+          <div class="lp-mini-name">Cleo Sol</div><div class="lp-mini-venue">Baby's All Right · Tonight</div><div class="lp-mini-dist">0.4 mi · $22</div>
+          <div class="lp-mini-acts">
+            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+          </div>
+        </div>
+        <div class="lp-mini" onclick="event.stopPropagation()">
+          <div class="lp-mini-top"><div class="lp-mini-em">🎸</div><div class="lp-match-sm">94%</div></div>
+          <div class="lp-mini-name">The Brklyn Set</div><div class="lp-mini-venue">Elsewhere · Tonight</div><div class="lp-mini-dist">1.2 mi · Free</div>
+          <div class="lp-mini-acts">
+            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+          </div>
+        </div>
+        <div class="lp-mini" onclick="event.stopPropagation()">
+          <div class="lp-mini-top"><div class="lp-mini-em">🎹</div><div class="lp-match-sm">91%</div></div>
+          <div class="lp-mini-name">Sault</div><div class="lp-mini-venue">Brooklyn Steel · Sat</div><div class="lp-mini-dist">2.1 mi · $20</div>
+          <div class="lp-mini-acts">
+            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+          </div>
+        </div>
+        <div class="lp-mini" onclick="event.stopPropagation()">
+          <div class="lp-mini-top"><div class="lp-mini-em">🥁</div><div class="lp-match-sm">88%</div></div>
+          <div class="lp-mini-name">Dry Cleaning</div><div class="lp-mini-venue">Rough Trade · Fri</div><div class="lp-mini-dist">1.5 mi · $22</div>
+          <div class="lp-mini-acts">
+            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="lp-act" onclick="event.stopPropagation()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sec-hdr" style="padding:0 20px 12px;"><div class="sec-title">All events nearby</div><div class="sec-all">See all</div></div>
+    <div class="nearby-list">
+      <div class="nearby-item"><div class="nearby-thumb nt1">🎻</div><div class="nearby-info"><div class="nearby-name">Sudan Archives</div><div class="nearby-det">Brooklyn Steel · Hip-Hop / R&B</div></div><div class="nearby-r"><div class="nearby-date">Tonight</div><div class="nearby-dist">1.2 mi · $30</div></div></div>
+      <div class="nearby-item"><div class="nearby-thumb nt2">🎹</div><div class="nearby-info"><div class="nearby-name">serpentwithfeet</div><div class="nearby-det">National Sawdust · R&B</div></div><div class="nearby-r"><div class="nearby-date">Fri Apr 11</div><div class="nearby-dist">2.1 mi · $25</div></div></div>
+      <div class="nearby-item"><div class="nearby-thumb nt3">🎸</div><div class="nearby-info"><div class="nearby-name">The Messthetics</div><div class="nearby-det">Elsewhere · Post-punk</div></div><div class="nearby-r"><div class="nearby-date">Sat Apr 12</div><div class="nearby-dist">0.8 mi · $15</div></div></div>
+    </div>
+  </div>
+  <div class="bnav">
+    <div class="ni" onclick="goBack('s1')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
+    <div class="ni active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg><span>Events</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Library</span></div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 3: LOCAL PULSE MAP ══ -->
+<div class="screen" id="s3">
+  <div class="map-wrap">
+    <div class="map-bg">
+      <svg class="map-streets" viewBox="0 0 390 334" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+        <rect width="390" height="334" fill="#1a2035"/>
+        <line x1="0" y1="75"  x2="390" y2="75"  stroke="#3d5a8a" stroke-width="1.5"/>
+        <line x1="0" y1="145" x2="390" y2="145" stroke="#3d5a8a" stroke-width="0.8"/>
+        <line x1="0" y1="210" x2="390" y2="210" stroke="#3d5a8a" stroke-width="1.5"/>
+        <line x1="0" y1="280" x2="390" y2="280" stroke="#3d5a8a" stroke-width="0.8"/>
+        <line x1="70"  y1="0" x2="70"  y2="334" stroke="#3d5a8a" stroke-width="0.8"/>
+        <line x1="155" y1="0" x2="155" y2="334" stroke="#3d5a8a" stroke-width="1.5"/>
+        <line x1="240" y1="0" x2="240" y2="334" stroke="#3d5a8a" stroke-width="0.8"/>
+        <line x1="320" y1="0" x2="320" y2="334" stroke="#3d5a8a" stroke-width="1.5"/>
+        <line x1="0" y1="315" x2="390" y2="50" stroke="#3d5a8a" stroke-width="1.2"/>
+        <rect x="72" y="77" width="81" height="66" fill="rgba(61,90,138,0.08)" rx="2"/>
+        <rect x="157" y="147" width="81" height="61" fill="rgba(61,90,138,0.08)" rx="2"/>
+        <rect x="72" y="212" width="81" height="66" fill="rgba(61,90,138,0.08)" rx="2"/>
+        <rect x="242" y="77" width="76" height="66" fill="rgba(61,90,138,0.08)" rx="2"/>
+        <rect x="242" y="212" width="76" height="66" fill="rgba(61,90,138,0.08)" rx="2"/>
+        <rect x="157" y="77" width="81" height="66" fill="rgba(61,90,138,0.08)" rx="2"/>
+      </svg>
+      <div class="map-hdr">
+        <div class="map-hdr-row">
+          <div class="map-hdr-left">
+            <div class="map-hdr-back" onclick="goBack('s2')">‹</div>
+            <div class="map-hdr-title">Discover Events</div>
+          </div>
+          <div class="map-hdr-icons">
+            <div class="map-hdr-icon">🔍</div>
+            <div class="map-hdr-icon" style="font-size:11px;font-weight:700;">ℹ</div>
+          </div>
+        </div>
+        <div class="filter-row">
+          <button class="fchip active"><div class="fchip-dot"></div>Tonight</button>
+          <button class="fchip">This week</button>
+          <button class="fchip">This month</button>
+          <button class="fchip">All</button>
+        </div>
+      </div>
+      <div class="map-location">Brooklyn, NY · 5mi radius</div>
+      <div class="user-dot" style="left:188px;top:216px;"></div>
+      <div class="map-pin" style="left:90px;top:108px;" onclick="goTo('s4')">
+        <div class="pin-label green">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          Cleo Sol + top match
+        </div>
+        <div class="pin-tail green"></div>
+      </div>
+      <div class="map-pin" style="left:238px;top:85px;">
+        <div class="pin-label amber">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          The Brklyn Set
+        </div>
+        <div class="pin-tail amber"></div>
+      </div>
+      <div class="map-pin" style="left:288px;top:165px;">
+        <div class="pin-label dim">
+          <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.55)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          Sault + 2 more
+        </div>
+        <div class="pin-tail dim"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="feed-panel">
+    <div class="feed-handle"></div>
+    <div class="feed-hdr">
+      <div class="feed-section-title">Top picks for you</div>
+      <div class="feed-count">12 near you</div>
+    </div>
+    <div class="feed-chips">
+      <div class="feed-chip active">Distance</div>
+      <div class="feed-chip">Cost</div>
+      <div class="feed-chip">Match</div>
+      <div class="feed-chip">Genre</div>
+    </div>
+    <div class="feed-scroll">
+      <div class="fc fc-top" onclick="goTo('s4')">
+        <div class="fc-art fca1">🌿</div>
+        <div class="fc-info">
+          <div class="fc-name">Cleo Sol</div>
+          <div class="fc-venue">Baby's All Right · Tonight 9pm</div>
+          <div class="fc-tags"><span class="tag tag-green">✨ Top match</span><span class="tag tag-blue">🎟 Tickets avail.</span></div>
+        </div>
+        <div class="fc-r">
+          <div class="fc-dist">0.4 mi</div>
+          <div class="fc-acts">
+            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <div class="fc">
+        <div class="fc-art fca2">🎸</div>
+        <div class="fc-info">
+          <div class="fc-name">The Brklyn Set</div>
+          <div class="fc-venue">Elsewhere · Tonight 10pm</div>
+          <div class="fc-tags"><span class="tag tag-amber">📍 Local act</span><span class="tag tag-white">🆓 Free entry</span></div>
+        </div>
+        <div class="fc-r">
+          <div class="fc-dist">1.2 mi</div>
+          <div class="fc-acts">
+            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <div class="fc">
+        <div class="fc-art fca3">🎹</div>
+        <div class="fc-info">
+          <div class="fc-name">Sault + 2 local acts</div>
+          <div class="fc-venue">Brooklyn Steel · Sat Nov 2</div>
+          <div class="fc-tags"><span class="tag tag-green">✨ Top match</span><span class="tag tag-red">🔥 Selling fast</span></div>
+        </div>
+        <div class="fc-r">
+          <div class="fc-dist">2.1 mi</div>
+          <div class="fc-acts">
+            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <div class="fc">
+        <div class="fc-art fca4">🎤</div>
+        <div class="fc-info">
+          <div class="fc-name">Dry Cleaning</div>
+          <div class="fc-venue">Rough Trade NYC · Fri Apr 11</div>
+          <div class="fc-tags"><span class="tag tag-green">✨ Top match</span><span class="tag tag-white">🎸 Post-punk</span></div>
+        </div>
+        <div class="fc-r">
+          <div class="fc-dist">1.5 mi</div>
+          <div class="fc-acts">
+            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <div class="fc">
+        <div class="fc-art fca5">🥁</div>
+        <div class="fc-info">
+          <div class="fc-name">Militarie Gun</div>
+          <div class="fc-venue">Elsewhere · Sat Apr 12</div>
+          <div class="fc-tags"><span class="tag tag-amber">📍 Local act</span><span class="tag tag-white">💵 $15</span></div>
+        </div>
+        <div class="fc-r">
+          <div class="fc-dist">0.9 mi</div>
+          <div class="fc-acts">
+            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="act-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bnav">
+    <div class="ni" onclick="goBack('s1')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
+    <div class="ni active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg><span>Events</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Library</span></div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 4: EVENT DETAIL ══ -->
+<div class="screen" id="s4">
+  <!-- HERO -->
+  <div class="s4-hero">
+    <div class="s4-hero-bg"></div>
+    <div class="s4-back" onclick="goBack('s3')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Discover Events
+    </div>
+    <div class="s4-hero-content">
+      <div class="s4-match-pill">
+        <div class="s4-match-dot"></div>
+        Top match for you
+      </div>
+      <div class="s4-play-row">
+        <div class="s4-play-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+      </div>
+      <div class="s4-name">Cleo Sol</div>
+      <div class="s4-sub">with special guests</div>
+    </div>
+    <div class="s4-fade"></div>
+  </div>
+
+  <!-- SCROLLABLE CONTENT -->
+  <div class="s4-scroll">
+
+    <!-- DETAIL ROWS -->
+    <div class="s4-details">
+      <div class="s4-detail-row">
+        <div class="s4-detail-icon">🗓</div>
+        <div class="s4-detail-body">
+          <div class="s4-detail-label">Date &amp; Time</div>
+          <div class="s4-detail-val">Tonight · Friday Mar 28</div>
+          <div class="s4-detail-sub">Doors 8pm · Show 9pm</div>
+        </div>
+      </div>
+      <div class="s4-detail-row">
+        <div class="s4-detail-icon">📍</div>
+        <div class="s4-detail-body">
+          <div class="s4-detail-label">Venue</div>
+          <div class="s4-detail-val">Baby's All Right</div>
+          <div class="s4-detail-sub">0.4 mi · Williamsburg, Brooklyn</div>
+        </div>
+      </div>
+      <div class="s4-detail-row">
+        <div class="s4-detail-icon">🎟</div>
+        <div class="s4-detail-body">
+          <div class="s4-detail-label">Tickets</div>
+          <div class="s4-detail-val">$18 – $35</div>
+          <div class="s4-detail-sub">Via Eventbrite · Limited availability</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHY SPOTIFY PICKED THIS -->
+    <div class="s4-why">
+      <div class="s4-why-title">Why Spotify picked this for you</div>
+      <div class="s4-bar-row">
+        <div class="s4-bar-label">Soul / R&B</div>
+        <div class="s4-bar-track"><div class="s4-bar-fill" style="width:92%"></div></div>
+        <div class="s4-bar-pct">92%</div>
+      </div>
+      <div class="s4-bar-row">
+        <div class="s4-bar-label">Vocal style</div>
+        <div class="s4-bar-track"><div class="s4-bar-fill" style="width:88%"></div></div>
+        <div class="s4-bar-pct">88%</div>
+      </div>
+      <div class="s4-bar-row">
+        <div class="s4-bar-label">Tempo &amp; mood</div>
+        <div class="s4-bar-track"><div class="s4-bar-fill" style="width:79%"></div></div>
+        <div class="s4-bar-pct">79%</div>
+      </div>
+    </div>
+
+    <!-- FANS ALSO LOVE -->
+    <div class="s4-fans">
+      <div class="s4-fans-title">Fans of this artist also love</div>
+      <div class="s4-fans-row">
+        <div class="s4-fan-chip">
+          <div class="s4-fan-ava fav1">🎤</div>
+          <div class="s4-fan-name">Little Simz</div>
+        </div>
+        <div class="s4-fan-chip">
+          <div class="s4-fan-ava fav2">🎵</div>
+          <div class="s4-fan-name">Sault</div>
+        </div>
+        <div class="s4-fan-chip">
+          <div class="s4-fan-ava fav3">🎸</div>
+          <div class="s4-fan-name">Lianne La Havas</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- API SOURCE BADGES -->
+    <div class="s4-sources">
+      <div class="s4-source-badge"><div class="s4-source-dot"></div> Via Eventbrite</div>
+      <div class="s4-source-badge"><div class="s4-source-dot"></div> Via Bandsintown</div>
+    </div>
+
+  </div>
+
+  <!-- TWO-BUTTON CTA -->
+  <div class="s4-cta">
+    <div class="s4-cta-row">
+      <button class="btn-tickets">Get tickets</button>
+      <button class="btn-icon-cta" id="btn-save" onclick="toggleSave()" title="Save event">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      </button>
+      <button class="btn-icon-cta" onclick="openShare()" title="Share event">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- SAVE TOAST -->
+  <div class="save-toast" id="save-toast">
+    <span class="save-toast-icon">🔖</span>
+    <span class="save-toast-text">Saved! We'll remind you before the show.</span>
+  </div>
+
+  <!-- SHARE SHEET -->
+  <div class="share-overlay" id="share-overlay" onclick="closeShare()"></div>
+  <div class="share-sheet" id="share-sheet">
+    <div class="share-handle"></div>
+    <div class="share-title">Share this event</div>
+    <div class="share-friends">
+      <div class="share-friends-label">Send to a friend</div>
+      <div class="share-friends-row">
+        <div class="share-friend" onclick="shareToFriend(this)">
+          <div class="share-friend-ava" style="background:linear-gradient(135deg,#4a1942,#9d174d);">Y</div>
+          <div class="share-friend-name">Yahor</div>
+        </div>
+        <div class="share-friend" onclick="shareToFriend(this)">
+          <div class="share-friend-ava" style="background:linear-gradient(135deg,#064e3b,#059669);">C</div>
+          <div class="share-friend-name">Coriander</div>
+        </div>
+        <div class="share-friend" onclick="shareToFriend(this)">
+          <div class="share-friend-ava" style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8);">I</div>
+          <div class="share-friend-name">Irma</div>
+        </div>
+        <div class="share-friend" onclick="shareToFriend(this)">
+          <div class="share-friend-ava" style="background:linear-gradient(135deg,#3d1f00,#c2410c);">D</div>
+          <div class="share-friend-name">Danny</div>
+        </div>
+        <div class="share-friend" onclick="shareToFriend(this)">
+          <div class="share-friend-ava" style="background:linear-gradient(135deg,#1a1a3e,#6d28d9);">V</div>
+          <div class="share-friend-name">Very</div>
+        </div>
+      </div>
+    </div>
+    <div class="share-divider"></div>
+    <div class="share-socials-label">Share to</div>
+    <div class="share-socials">
+      <div class="share-social-btn" onclick="shareSocial(this)">
+        <div class="share-social-icon" style="background:#1877F2;">f</div>
+        <div class="share-social-name">Facebook</div>
+      </div>
+      <div class="share-social-btn" onclick="shareSocial(this)">
+        <div class="share-social-icon" style="background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);">📷</div>
+        <div class="share-social-name">Instagram</div>
+      </div>
+      <div class="share-social-btn" onclick="shareSocial(this)">
+        <div class="share-social-icon" style="background:#000;">𝕏</div>
+        <div class="share-social-name">X</div>
+      </div>
+      <div class="share-social-btn" onclick="shareSocial(this)">
+        <div class="share-social-icon" style="background:#25D366;">💬</div>
+        <div class="share-social-name">WhatsApp</div>
+      </div>
+      <div class="share-social-btn" onclick="shareSocial(this)">
+        <div class="share-social-icon" style="background:#0088cc;">✈️</div>
+        <div class="share-social-name">Telegram</div>
+      </div>
+    </div>
+    <button class="share-cancel" onclick="closeShare()">Cancel</button>
+  </div>
+
+  <div class="bnav">
+    <div class="ni" onclick="goBack('s1')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
+    <div class="ni active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg><span>Events</span></div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Library</span></div>
+  </div>
+</div>
+
+</div>
+<script>
+let navHistory=[];
+function goTo(id){
+  const cur=document.querySelector('.screen.active');
+  const next=document.getElementById(id);
+  if(!next||cur===next)return;
+  navHistory.push(cur.id);
+  cur.classList.add('slide-out'); cur.classList.remove('active');
+  next.classList.add('active'); next.classList.remove('slide-out');
+  setTimeout(()=>cur.classList.remove('slide-out'),380);
+}
+function goBack(id){
+  const cur=document.querySelector('.screen.active');
+  const prev=document.getElementById(id);
+  if(!prev||cur===prev)return;
+  cur.classList.remove('active');
+  prev.classList.remove('slide-out'); prev.classList.add('active');
+  if(navHistory.length)navHistory.pop();
+}
+
+// SAVE / BOOKMARK
+let saveToastTimer = null;
+function toggleSave() {
+  const btn = document.getElementById('btn-save');
+  const toast = document.getElementById('save-toast');
+  const isSaved = btn.classList.toggle('saved');
+  // fill the bookmark icon when saved
+  const path = btn.querySelector('path');
+  if (isSaved) {
+    path.setAttribute('fill', 'var(--green)');
+    path.setAttribute('stroke', 'var(--green)');
+    toast.querySelector('.save-toast-text').textContent = "Saved! We'll remind you before the show.";
+    toast.querySelector('.save-toast-icon').textContent = "🔖";
+  } else {
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'currentColor');
+    toast.querySelector('.save-toast-text').textContent = "Removed from saved events.";
+    toast.querySelector('.save-toast-icon').textContent = "✕";
+  }
+  toast.classList.add('visible');
+  clearTimeout(saveToastTimer);
+  saveToastTimer = setTimeout(() => toast.classList.remove('visible'), 2800);
+}
+
+// SHARE SHEET
+function openShare() {
+  document.getElementById('share-overlay').classList.add('visible');
+  document.getElementById('share-sheet').classList.add('visible');
+}
+function closeShare() {
+  document.getElementById('share-overlay').classList.remove('visible');
+  document.getElementById('share-sheet').classList.remove('visible');
+}
+function shareToFriend(el) {
+  const ava = el.querySelector('.share-friend-ava');
+  const name = el.querySelector('.share-friend-name').textContent;
+  ava.classList.add('sent');
+  const orig = ava.textContent;
+  ava.textContent = '✓';
+  setTimeout(() => {
+    ava.textContent = orig;
+    closeShare();
+  }, 900);
+}
+function shareSocial(el) {
+  const icon = el.querySelector('.share-social-icon');
+  const orig = icon.innerHTML;
+  icon.innerHTML = '✓';
+  setTimeout(() => {
+    icon.innerHTML = orig;
+    closeShare();
+  }, 700);
+}
+</script>
+</body>
+</html>
